@@ -79,18 +79,20 @@ ServiceMonitor setup (serviceMonitor_all.yaml)
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: all-services
-  namespace: monitoring
+  name: podinfo
+  labels:
+    release: kube-prometheus  
 spec:
   selector:
     matchLabels:
-      monitoring: enabled
+      app.kubernetes.io/name: "backend-podinfo"
   namespaceSelector:
-    any: true
+    matchNames:
+      - test
   endpoints:
-    - port: http
-      path: /metrics
-      interval: 15s
+  - port: http
+    path: /metrics
+    interval: 15s
 ```
 apply it
 ```
@@ -141,11 +143,11 @@ kubectl patch svc backend-podinfo -n test \
 ```
 Access Frontend - localhost:8080
 ```
-   kubectl port-forward -n monitoring svc/frontend-podinfo 8080:9898
+   kubectl port-forward -n test svc/frontend-podinfo 8080:9898
 ```
 Access Backend - localhost:8090
 ```
-   kubectl port-forward -n monitoring svc/backend-podinfo 8090:9898
+   kubectl port-forward -n test svc/backend-podinfo 8090:9898
 ```
 ## 🔥 Step 5: Run Chaos Experiments
 Follow the experiment 
