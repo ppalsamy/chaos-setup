@@ -17,7 +17,8 @@ Ensure the following are installed:
   - `brew install kubectl`
 - `helm` (v3+)
    - `brew install helm` 
-
+- `k6`
+   - `brew install k6` 
 ---
 
 ## ⚙️ Step 1: Create a Local Kubernetes Cluster (Kind)
@@ -116,11 +117,8 @@ kubectl create ns test
 #install frontend podinfo in test namespace
 helm upgrade --install --wait frontend \
 --namespace test \
---set replicaCount=2 \
 --set backend=http://backend-podinfo:9898/echo \
 podinfo/podinfo
-
-helm test frontend --namespace test
 
 #install backend podinfo in test namespace
 helm upgrade --install --wait backend \
@@ -129,30 +127,76 @@ helm upgrade --install --wait backend \
 podinfo/podinfo
 
 ```
-Add label monitoring=enabled
-```
-kubectl patch svc frontend-podinfo -n test \
--p '{"metadata":{"labels":{"monitoring":"enabled"}}}'
 
-#backend-podinfo
-kubectl patch svc backend-podinfo -n test \
--p '{"metadata":{"labels":{"monitoring":"enabled"}}}'
-```
-Access Frontend - localhost:8080
-```
-   kubectl port-forward -n test svc/frontend-podinfo 8080:9898
-```
 Access Backend - localhost:8090
 ```
-   kubectl port-forward -n test svc/backend-podinfo 8090:9898
+   kubectl port-forward -n test svc/backend-podinfo 9898:9898
 ```
 ## 🔥 Step 5: Run Chaos Experiments
 Follow the experiment 
 ~~~
 https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/
 ~~~
+1. Create some load for experiment
+   Use k6 to create some load
+   - use below k6-load.js
+     - ~~~
+        import http from 'k6/http';
+        import { check, sleep } from 'k6';
+        
+        export const options = {
+          vus: 30, // 30 concurrent users
+          duration: '20m',
+          thresholds: {
+            http_req_duration: ['p(95)<800'],
+            http_req_failed: ['rate<0.05'],
+          }
+        };
+        
+        export default function () {
+          const res = http.get('http://backend-podinfo.test.svc.cluster.local:9898/api/info');
+          check(res, {
+            'status is 200': (r) => r.status === 200,
+            'response time < 800ms': (r) => r.timings.duration < 800,
+          });
+          sleep(Math.random() * 0.2); // 0–200ms
+        }
 
+
+       ~~~ 
+   - create configmap to load the script
+     ``` kubectl create configmap k6-load --from-file=k6-load.js -n test ```
+   - Create a job  using k6-job.yaml
+     ~~~
+     apiVersion: batch/v1
+     kind: Job
+     metadata:
+       name: k6-load-job
+       namespace: test
+     spec:
+       template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: k6
+            image: loadimpact/k6:latest
+            command: ["k6", "run", "/scripts/k6-load.js"]
+            volumeMounts:
+              - name: k6-load
+                mountPath: /scripts
+          volumes:
+            - name: k6-load
+              configMap:
+                name: k6-load
+      backoffLimit: 0
+
+     ~~~
+     - Run the load
+       ` kubectl apply -f k6-job.yaml`
+3. sdf
+
+   
 🧹 Cleanup
 ```
-kind delete cluster --name chaos-demo
+kind delete cluster --name dev-cluster
 ```
