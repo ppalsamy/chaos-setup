@@ -41,21 +41,18 @@ kubectl create ns chaos-mesh
 helm install chaos-mesh chaos-mesh/chaos-mesh \
   -n chaos-mesh \
   --set dashboard.create=true \
+  --set dashboard.securityMode=false \
   --set chaosDaemon.runtime=containerd \
   --set chaosDaemon.socketPath=/run/containerd/containerd.sock
 ```
-4. Create Service Account to access Chaos Mesh Dashboard:
-   
-   Follow the steps [provided here](https://chaos-mesh.org/docs/manage-user-permissions/)
-6. Access the Chaos Mesh Dashboard (localhost:2333):
+
+4. Access the Chaos Mesh Dashboard (localhost:2333):
 ```
 kubectl port-forward -n chaos-mesh svc/chaos-dashboard 2333:2333
 # Open http://localhost:2333 in your browser
 ```
-7. Create token to login
-```
-kubectl create token account-chaos-mesh-manager -n chaos-mesh
-```
+
+
 ## ⚙️ Step 3: Install Prometheus + Grafana (Operator)
 
   ```
