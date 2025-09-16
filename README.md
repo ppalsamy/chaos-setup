@@ -149,34 +149,9 @@ https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/
 ~~~
 1. Create some load for experiment
    Use k6 to create some load
-   - use below k6-load.js
-     - ~~~
-        import http from 'k6/http';
-        import { check, sleep } from 'k6';
-        
-        export const options = {
-          vus: 30, // 30 concurrent users
-          duration: '20m',
-          thresholds: {
-            http_req_duration: ['p(95)<800'],
-            http_req_failed: ['rate<0.05'],
-          }
-        };
-        
-        export default function () {
-          const res = http.get('http://backend-podinfo.test.svc.cluster.local:9898/api/info');
-          check(res, {
-            'status is 200': (r) => r.status === 200,
-            'response time < 800ms': (r) => r.timings.duration < 800,
-          });
-          sleep(Math.random() * 0.2); // 0–200ms
-        }
-
-
-       ~~~ 
    - create configmap to load the script
-     ``` kubectl create configmap k6-load --from-file=k6-load.js -n test ```
-   - Create a job  using k6-job.yaml
+     ``` kubectl create configmap k6-load --from-file=k6/k6-load.js -n test ```
+   - Create a job  using k6/k6-job.yaml
      ~~~
      apiVersion: batch/v1
      kind: Job
@@ -202,8 +177,14 @@ https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/
 
      ~~~
      - Run the load
-       ` kubectl apply -f k6-job.yaml`
-3. sdf
+       ` kubectl apply -f k6/k6-job.yaml`
+2. CPU Stress  / Network latency Chaos
+
+    Run the experiment using the file in the experiments folder
+
+    `kubectl apply -f experiments/backend-stress.yaml`
+
+    observe the change in Grafana during the experiment and take action. 
 
    
 🧹 Cleanup

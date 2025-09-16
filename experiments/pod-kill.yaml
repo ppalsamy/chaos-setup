@@ -1,0 +1,14 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-kill-backend
+  namespace: chaos-mesh
+spec:
+  action: pod-kill               # Kills the selected pods
+  mode: one                      # Kill only one pod at a time
+  selector:
+    namespaces:
+      - test
+    labelSelectors:
+      app.kubernetes.io/name: "backend-podinfo"
+  duration: "1m"                # Pod will be killed and restarted after 1m

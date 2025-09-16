@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: backend-mem
+  namespace: chaos-mesh
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - test
+    labelSelectors:
+      app.kubernetes.io/name: "backend-podinfo"
+  stressors:
+    memory:
+      workers: 1 
+      size: "600MiB"
+  duration: "5m"

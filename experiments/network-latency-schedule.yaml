@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: backend-delay-schedule
+  namespace: chaos-mesh
+spec:
+  schedule: '@every 2m'
+  historyLimit: 5
+  concurrencyPolicy: 'Allow'
+  type: 'NetworkChaos'
+  networkChaos:
+    action: delay
+    mode: all
+    selector:
+      namespaces:
+        - test
+      labelSelectors:
+        app.kubernetes.io/name: "backend-podinfo"
+    delay:
+      latency: '600ms'
+      correlation: '100'
+      jitter: '200ms'
+    duration: '40s'

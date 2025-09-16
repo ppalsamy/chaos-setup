@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: backend-to-redis-latency
+  namespace: test
+spec:
+  action: delay
+  mode: all
+  selector:
+    labelSelectors:
+      app.kubernetes.io/name: backend-podinfo
+  target: Request
+  port: 6379 # Port of the Redis service
+  delay:
+    latency: "400ms"
+    jitter: "100ms"
+    correlation: "80"
+  duration: "5m"
