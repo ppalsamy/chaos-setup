@@ -116,17 +116,25 @@ kubectl create ns test
 
 #install frontend podinfo in test namespace
 helm upgrade --install --wait frontend \
---namespace test \
---set backend=http://backend-podinfo:9898/echo \
---set replicas=2 \
-podinfo/podinfo
+  --namespace test \
+  --set backend=http://backend-podinfo:9898/echo \
+  --set replicaCount=2 \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=128Mi \
+  --set resources.limits.cpu=500m \
+  --set resources.limits.memory=256Mi \
+  podinfo/podinfo
 
 #install backend podinfo in test namespace
 helm upgrade --install --wait backend \
---namespace test \
---set redis.enabled=true \
---set replicas=2 \
-podinfo/podinfo
+  --namespace test \
+  --set redis.enabled=true \
+  --set replicaCount=2 \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=128Mi \
+  --set resources.limits.cpu=500m \
+  --set resources.limits.memory=256Mi \
+  podinfo/podinfo
 
 ```
 
